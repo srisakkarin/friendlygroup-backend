@@ -65,7 +65,8 @@
         "sort-packages": true,
         "platform": {
             "php": "7.4.25"
-        }
+        },
+        "process-timeout": 900
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
