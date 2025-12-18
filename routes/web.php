@@ -38,7 +38,7 @@ Route::get('/', [LoginController::class, 'login']);
 Route::get('index', [LoginController::class, 'index'])->middleware(['checkLogin'])->name('index');
 
 
-Route::post('login', [LoginController::class, 'checklogin'])->middleware(['checkLogin'])->name('login');
+Route::post('login', [LoginController::class, 'checklogin'])->name('login');
 Route::post('updateProflie', [LoginController::class, 'updateProflie'])->middleware(['checkLogin'])->name('updateProflie');
 
 Route::get('logout', [LoginController::class, 'logout'])->middleware(['checkLogin'])->name('logout');

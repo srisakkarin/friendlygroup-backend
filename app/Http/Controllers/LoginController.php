@@ -61,7 +61,7 @@ class LoginController extends Controller
             Session::put('app_name', $setting->app_name);
         }
 
-        $data = Admin::where('user_name', $req->user_name)->first();
+        $data = Admin::where('user_name', $req->user_name)->first();  
 
         Artisan::call('storage:link');
 
