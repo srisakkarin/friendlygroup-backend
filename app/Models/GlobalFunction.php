@@ -118,6 +118,7 @@ class GlobalFunction extends Model
     {
         $s3 = Storage::disk('s3');
         $environment = env('APP_ENV', 'local');
+        $appName = env('APP_NAME', 's3Storage'); // Default value for APP_NAME
 
         $file = $request->file($key);
         $fileContent = null;
@@ -147,11 +148,11 @@ class GlobalFunction extends Model
 
         // ตรวจสอบประเภทไฟล์เพื่อกำหนด path
         if (str_starts_with($mimeType, 'image/')) {
-            $filePath = "matchme/{$environment}/uploads/images/{$fileName}";
+            $filePath = "{$appName}/{$environment}/uploads/images/{$fileName}";
         } elseif (str_starts_with($mimeType, 'video/')) {
-            $filePath = "matchme/{$environment}/uploads/video/{$fileName}";
+            $filePath = "{$appName}/{$environment}/uploads/video/{$fileName}";
         } else {
-            $filePath = "matchme/{$environment}/uploads/other/{$fileName}";
+            $filePath = "{$appName}/{$environment}/uploads/other/{$fileName}";
         }
 
         $s3->put($filePath, $fileContent, [
