@@ -29,7 +29,7 @@
             font-size: 22px;
             margin: 5px 0px;
             box-shadow: 2px 2px 10px 0 #97979794;
-            border-radius: 10px;
+            border-radius: var(--border-radius);
             background: #ff5622;
             text-align: center;
         }
