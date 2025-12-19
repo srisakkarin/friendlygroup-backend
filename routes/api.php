@@ -42,6 +42,10 @@ header('Access-Control-Allow-Methods: POST, GET, OPTIONS, PUT, DELETE');
 header('Access-Control-Allow-Headers: Content-Type, X-Auth-Token, Origin, Authorization');
 // header('Access-Control-Allow-Credentials: true');
 
+//TEST API IS WORKING
+Route::get('/', function () {
+  return response()->json(['message' => 'API is working!']);
+});
 
 //create cors test route
 Route::get('/cors-test', function () {
