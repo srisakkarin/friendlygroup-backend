@@ -17,6 +17,7 @@ use App\Http\Controllers\PromotionPackageController;
 use App\Http\Controllers\RedeemRequestsController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RevenueSharingRuleController;
+use App\Http\Controllers\RewardController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\ShopProductCategoriesController;
 use App\Http\Controllers\ShopProductController;
@@ -258,6 +259,15 @@ Route::post('updateProduct', [ShopProductController::class, 'updateProduct'])->n
 Route::post('deleteProduct', [ShopProductController::class, 'deleteProduct'])->name('deleteProduct')->middleware(['checkLogin']);
 Route::get('getProductById/{id}', [ShopProductController::class, 'getProductById'])->name('getProductById')->middleware(['checkLogin']);
 
+/*|--------------------------------------------------------------------------|
+| Rewards Web 
+|--------------------------------------------------------------------------|*/
+Route::get('/rewards', [RewardController::class, 'index'])->name('rewards')->middleware(['checkLogin']);
+Route::get('/get-rewards', [RewardController::class, 'getRewards'])->middleware(['checkLogin']);
+Route::post('/get-reward-by-id', [RewardController::class, 'getRewardById'])->middleware(['checkLogin']);
+Route::post('/add-reward', [RewardController::class, 'store'])->middleware(['checkLogin']);
+Route::post('/update-reward', [RewardController::class, 'update'])->middleware(['checkLogin']);
+Route::post('/delete-reward/{id}', [RewardController::class, 'destroy'])->middleware(['checkLogin']);
 
 // Pages Routes
 Route::get('viewPrivacy', [PagesController::class, 'viewPrivacy'])->middleware(['checkLogin'])->name('viewPrivacy');

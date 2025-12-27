@@ -133,7 +133,7 @@
                         <span>{{ __('app.Subscriptions') }}</span>
                         </a>
                         </li> --}}
-                        <li class="sideBarli packageSideA">
+                        {{-- <li class="sideBarli packageSideA">
                             <a href="{{ route('packages') }}" class="nav-link">
                                 <i class="fas fa-crown"></i>
                                 <span>{{ __('app.packages') }}</span>
@@ -144,11 +144,17 @@
                                 <i class="fas fa-ad"></i>
                                 <span>{{ __('app.promotion_packages') }}</span>
                             </a>
-                        </li>
+                        </li> --}}
                         <li class="sideBarli diamondpackSideA">
                             <a href="{{ route('diamondpacks') }}" class="nav-link">
                                 <i class="fas fa-coins"></i>
                                 <span>{{ __('app.Diamond_packs') }}</span>
+                            </a>
+                        </li>
+                        <li class="sideBarli rewardSideA">
+                            <a href="{{ route('rewards') }}" class="nav-link">
+                                <i class="fas fa-gifts"></i>
+                                <span>{{ __('app.rewards') }}</span>
                             </a>
                         </li>
                         <li class="sideBarli giftSideA">
