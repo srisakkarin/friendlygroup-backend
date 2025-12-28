@@ -151,10 +151,22 @@
                                 <span>{{ __('app.Diamond_packs') }}</span>
                             </a>
                         </li>
+                        <li class="sideBarli pointsSideA">
+                            <a href="{{ route('points') }}" class="nav-link">
+                                <i class="far fa-star"></i>
+                                <span>{{ __('app.points') }}</span>
+                            </a>
+                        </li>
                         <li class="sideBarli rewardSideA">
                             <a href="{{ route('rewards') }}" class="nav-link">
                                 <i class="fas fa-gifts"></i>
                                 <span>{{ __('app.rewards') }}</span>
+                            </a>
+                        </li>
+                        <li class="sideBarli redemptionSideA">
+                            <a href="{{ route('redemptions') }}" class="nav-link">
+                               <i class="far fa-bookmark"></i>
+                                <span>{{ __('app.redemptions') }}</span>
                             </a>
                         </li>
                         <li class="sideBarli giftSideA">

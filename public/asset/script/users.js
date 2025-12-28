@@ -331,7 +331,7 @@ $(document).ready(function () {
         }
     }
     setTimeout(() => {
-        fetchPackages();
+        // fetchPackages();
     }, 500);
 
 });

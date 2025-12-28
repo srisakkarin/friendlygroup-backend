@@ -2397,7 +2397,7 @@ h6 .badge {
 	line-height: 24px;
 	padding: 12px 30px;
 	letter-spacing: 0.5px;
-	border-radius: var(--border-radius);
+	/* border-radius: var(--border-radius); */
 }
 
 .btn.btn-icon-split {

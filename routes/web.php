@@ -1,5 +1,7 @@
 <?php
+ 
 
+use App\Http\Controllers\Admin\RedemptionController;
 use App\Http\Controllers\DiamondPackController;
 use App\Http\Controllers\FileController;
 use App\Http\Controllers\HtmlContentController;
@@ -12,9 +14,10 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PackageController;
 use App\Http\Controllers\PackagesController;
 use App\Http\Controllers\PagesController;
+use App\Http\Controllers\PointController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\PromotionPackageController;
-use App\Http\Controllers\RedeemRequestsController;
+use App\Http\Controllers\RedeemRequestsController; 
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RevenueSharingRuleController;
 use App\Http\Controllers\RewardController;
@@ -268,6 +271,17 @@ Route::post('/get-reward-by-id', [RewardController::class, 'getRewardById'])->mi
 Route::post('/add-reward', [RewardController::class, 'store'])->middleware(['checkLogin']);
 Route::post('/update-reward', [RewardController::class, 'update'])->middleware(['checkLogin']);
 Route::post('/delete-reward/{id}', [RewardController::class, 'destroy'])->middleware(['checkLogin']);
+
+// Redemption History
+Route::get('/redemptions', [RedemptionController::class, 'index'])->name('redemptions')->middleware(['checkLogin']);
+Route::get('/get-redemptions', [RedemptionController::class, 'getRedemptions'])->middleware(['checkLogin']);
+Route::post('/mark-redemption-used', [RedemptionController::class, 'markAsUsed'])->middleware(['checkLogin']);
+
+// User Points Management
+Route::get('/points', [PointController::class, 'index'])->name('points')->middleware(['checkLogin']);
+Route::get('/get-users-points', [PointController::class, 'getUsersPoints'])->middleware(['checkLogin']);
+Route::get('/get-point-history', [PointController::class, 'getPointHistory'])->middleware(['checkLogin']);
+Route::post('/adjust-points', [PointController::class, 'adjustPoints'])->middleware(['checkLogin']);
 
 // Pages Routes
 Route::get('viewPrivacy', [PagesController::class, 'viewPrivacy'])->middleware(['checkLogin'])->name('viewPrivacy');
