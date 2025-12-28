@@ -72,6 +72,7 @@
                             <th>{{ __('app.Gender') }}</th>
                             <th>{{ __('app.BlockUser') }}</th>
                             <th>{{ __('app.Role') }}</th>
+                            <th>{{ __('app.Branch') }}</th>
                             <th>{{ __('app.ViewDetails') }}</th>
                         </tr>
                     </thead>
@@ -91,6 +92,7 @@
                             <th>{{ __('app.Gender') }}</th>
                             <th>{{ __('app.BlockUser') }}</th>
                             <th>{{ __('app.Role') }}</th>
+                            <th>{{ __('app.Branch') }}</th>
                             <th>{{ __('app.ViewDetails') }}</th>
                         </tr>
                     </thead>

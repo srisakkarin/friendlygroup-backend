@@ -23,6 +23,7 @@ use App\Models\PromotionPackageTransactions;
 use App\Models\RedeemRequest;
 use App\Models\Report;
 use App\Models\RevenueSharingRule;
+use App\Models\Shop;
 use App\Models\Story;
 use App\Models\User;
 use App\Models\UserNotification;
@@ -168,7 +169,8 @@ class UsersController extends Controller
             "youtube" => $req->youtube,
             "facebook" => $req->facebook,
             "live" => $req->live,
-            "role" => $req->role
+            "role" => $req->role,
+            "shop_id" =>  $req->shop_id,
         ]);
 
         if ($req->has('user_package')) {
@@ -583,6 +585,7 @@ class UsersController extends Controller
             ->has('images')
             ->whereNotIn('id', $blockedUsers)
             ->where('is_block', 0)
+            ->where('role','entertainer')
             ->when($genderPreference != 3, function ($query) use ($genderPreference) {
                 $query->where('gender', $genderPreference == 1 ? 1 : 2);
             })
@@ -651,9 +654,9 @@ class UsersController extends Controller
         array_push($blocked_users, $user->id);
 
         if ($request->gender == 3) {
-            $randomUser = Users::with('images')->has('images')->whereNotIn('id', $blocked_users)->where('is_block', 0)->inRandomOrder()->first();
+            $randomUser = Users::with('images')->has('images')->whereNotIn('id', $blocked_users)->where('is_block', 0)->where('role', 'entertainer')->inRandomOrder()->first();
         } else {
-            $randomUser = Users::with('images')->has('images')->whereNotIn('id', $blocked_users)->where('is_block', 0)->where('gender', $request->gender)->inRandomOrder()->first();
+            $randomUser = Users::with('images')->has('images')->whereNotIn('id', $blocked_users)->where('is_block', 0)->where('gender', $request->gender)->where('role', 'entertainer')->inRandomOrder()->first();
         }
 
         if ($randomUser == null) {
@@ -1428,18 +1431,17 @@ class UsersController extends Controller
         ]);
     }
 
-    // แก้ไข function fetchAllUsers
     function fetchAllUsers(Request $request)
     {
         $totalData = 0;
-        $query = Users::with(['inviter']);
+        // ✅ เพิ่ม 'shop' เข้าไปใน with เพื่อ Eager Load ข้อมูลสาขา
+        $query = Users::with(['inviter', 'shop']);
 
         // กรอง Fake Users ออกเสมอในฟังก์ชันนี้ (เพราะมี Tab แยก)
         // $query->where('is_fake', 0);
 
         // ✅ กรองตาม Role จาก Dynamic Tab
         if ($request->has('role') && $request->role != 'all') {
-            // dd($request->role);
             $query->where('role', $request->role);
         }
 
@@ -1477,7 +1479,11 @@ class UsersController extends Controller
 
         foreach ($result as $item) {
             $inviterName = $item->inviter->fullname ?? '—';
-            
+
+            // ✅ ดึงชื่อสาขา
+            $shopName = $item->shop->name ?? '-';
+            $shopHtml = '<span class="badge bg-light text-dark border">' . $shopName . '</span>';
+
             [$promotionPackageName, $endPromotionDate] = $this->getPromotionPackageDetails($item);
 
             if ($item->is_block == 0) {
@@ -1515,14 +1521,14 @@ class UsersController extends Controller
             if ($item->role == 'staff') $roleColor = 'info';
             elseif ($item->role == 'entertainer') $roleColor = 'warning';
             elseif ($item->role == 'customer') $roleColor = 'success';
-            
-            $roleHtml = '<span class="badge bg-'.$roleColor.' text-white">'.ucfirst($item->role ?? 'customer').'</span>';
+
+            $roleHtml = '<span class="badge bg-' . $roleColor . ' text-white">' . ucfirst($item->role ?? 'customer') . '</span>';
 
             $action = '<a href="' . route('viewUserDetails', $item->id) . '" class="btn btn-primary text-white" rel=' . $item->id . '><i class="fas fa-eye"></i></a>';
             $addCoin = '<a href="" data-id="' . $item->id . '" class="addCoins"><i class="i-cl-3 fas fa-plus-circle primary font-20 pointer p-l-5 p-r-5 me-2"></i></a>';
 
             $fullname = '<a href="' . route('invitee', ['id' => $item->id]) . '">' . $item->fullname . '<i class="fas fa-user-friends"></i></a> <br/><span style="font-size: 10px;">Invite Code: ' . $item->invite_code . '</span><br/><span class="badge bg-info text-white" style="font-size: 10px;padding:5px;">' . __('app.inviter') . '</span> <span style="font-size: 10px;">' . $inviterName . '</span>';
-            
+
             $data[] = array(
                 $image,
                 $identityHtml,
@@ -1532,7 +1538,125 @@ class UsersController extends Controller
                 $item->age,
                 $gender,
                 $block,
-                $roleHtml, 
+                $roleHtml,
+                $shopHtml, // ✅ เพิ่มคอลัมน์ Shop ตรงนี้
+                $action,
+            );
+        }
+        $json_data = array(
+            "draw"            => intval($request->input('draw')),
+            "recordsTotal"    => intval($totalData),
+            "recordsFiltered" => $totalFiltered,
+            "data"            => $data
+        );
+        echo json_encode($json_data);
+        exit();
+    }
+
+    // แก้ไข function fetchStreamerUsers
+    function fetchStreamerUsers(Request $request)
+    {
+        $totalData =  Users::where('can_go_live', '=', 2)->count();
+        // ✅ เพิ่ม 'shop' ใน with
+        $rows = Users::with(['inviter', 'shop'])->where('can_go_live', '=', 2)->orderBy('id', 'DESC')->get();
+
+        $result = $rows;
+
+        $columns = array(
+            0 => 'id',
+            1 => 'fullname'
+        );
+        $limit = $request->input('length');
+        $start = $request->input('start');
+        $order = $columns[$request->input('order.0.column')];
+        $dir = $request->input('order.0.dir');
+
+        $totalFiltered = $totalData;
+        if (empty($request->input('search.value'))) {
+            $result = Users::where('can_go_live', '=', 2)
+                ->offset($start)
+                ->limit($limit)
+                ->orderBy($order, $dir)
+                ->get();
+        } else {
+            $search = $request->input('search.value');
+            $result =  Users::where(function ($query) use ($search) {
+                $query->Where('fullname', 'LIKE', "%{$search}%")
+                    ->orWhere('identity', 'LIKE', "%{$search}%");
+            })
+                ->where('can_go_live', '=', 2)
+                ->offset($start)
+                ->limit($limit)
+                ->orderBy($order, $dir)
+                ->get();
+            $totalFiltered = Users::where(function ($query) use ($search) {
+                $query->Where('fullname', 'LIKE', "%{$search}%")
+                    ->orWhere('identity', 'LIKE', "%{$search}%");
+            })
+                ->where('can_go_live', '=', 2)
+                ->orWhere('fullname', 'LIKE', "%{$search}%")
+                ->count();
+        }
+        $data = array();
+        foreach ($result as $item) {
+            $inviterName = $item->inviter->fullname ?? '—';
+
+            // ✅ ดึงชื่อสาขา
+            $shopName = $item->shop->name ?? '-';
+            $shopHtml = '<span class="badge bg-light text-dark border">' . $shopName . '</span>';
+
+            [$promotionPackageName, $endPromotionDate] = $this->getPromotionPackageDetails($item);
+            if ($item->is_block == 0) {
+                $block  =  '<a class=" btn btn-danger text-white block" rel=' . $item->id . ' >' . __('app.Block') . '</a>';
+            } else {
+                $block  =  '<a class=" btn btn-success  text-white unblock " rel=' . $item->id . ' >' . __('app.Unblock') . '</a>';
+            }
+
+            if ($item->gender == 1) {
+                $gender = ' <span  class="badge bg-dark text-white  ">' . __('app.Male') . '</span>';
+            } else {
+                $gender = '  <span  class="badge bg-dark text-white  ">' . __('app.Female') . '</span>';
+            }
+
+            if (count($item->images) > 0) {
+                $image = '<img src="' . $this->envImage . $item->images[0]->image . '" width="50" height="50">';
+            } else {
+                $image = '<img src="http://placehold.jp/150x150.png" width="50" height="50">';
+            }
+
+            if ($item->can_go_live == 2) {
+                $liveEligible = ' <span class="badge bg-success text-white  ">Yes</span>';;
+            } else {
+                $liveEligible = ' <span class="badge bg-danger text-white  ">No</span>';;
+            }
+
+            if ($promotionPackageName === "No Promotion Package") {
+                $identityHtml = $item->identity;
+            } else {
+                $identityHtml = $item->identity . '<br/> <span class="badge bg-info text-white" style="font-size: 10px;padding:5px;">' . $promotionPackageName . '</span>';
+            }
+
+            // Role Badge Logic
+            $roleColor = 'secondary';
+            if ($item->role == 'staff') $roleColor = 'info';
+            elseif ($item->role == 'entertainer') $roleColor = 'warning';
+            elseif ($item->role == 'customer') $roleColor = 'success';
+
+            $roleHtml = '<span class="badge bg-' . $roleColor . ' text-white">' . ucfirst($item->role ?? 'customer') . '</span>';
+
+            $action = '<a href="' . route('viewUserDetails', $item->id) . '"class=" btn btn-primary text-white " rel=' . $item->id . ' ><i class="fas fa-eye"></i></a>';
+
+            $fullname = '<a href="' . route('invitee', ['id' => $item->id]) . '">' . $item->fullname . '<i class="fas fa-user-friends"></i></a> <br/><span style="font-size: 10px;">Invite Code: ' . $item->invite_code . '</span><br/><span class="badge bg-info text-white" style="font-size: 10px;padding:5px;">' . __('app.inviter') . '</span> <span style="font-size: 10px;">' . $inviterName . '</span>';
+            $data[] = array(
+                $image,
+                $identityHtml,
+                $fullname,
+                $liveEligible,
+                $item->age,
+                $gender,
+                $block,
+                $roleHtml,
+                $shopHtml, // ✅ เพิ่มคอลัมน์ Shop ตรงนี้
                 $action,
             );
         }
@@ -1550,7 +1674,8 @@ class UsersController extends Controller
     function fetchFakeUsers(Request $request)
     {
         $totalData =  Users::where('is_fake', '=', 1)->count();
-        $rows = Users::with(['inviter'])->where('is_fake', '=', 1)->orderBy('id', 'DESC')->get();
+        // ✅ เพิ่ม 'shop' ใน with
+        $rows = Users::with(['inviter', 'shop'])->where('is_fake', '=', 1)->orderBy('id', 'DESC')->get();
 
         $result = $rows;
 
@@ -1592,7 +1717,10 @@ class UsersController extends Controller
         $data = array();
         foreach ($result as $item) {
             $inviterName = $item->inviter->fullname ?? '—';
-            // ลบการเรียก getPackageDetails
+
+            // ✅ ดึงชื่อสาขา
+            $shopName = $item->shop->name ?? '-';
+            $shopHtml = '<span class="badge bg-light text-dark border">' . $shopName . '</span>';
 
             [$promotionPackageName, $endPromotionDate] = $this->getPromotionPackageDetails($item);
             if ($item->is_block == 0) {
@@ -1639,8 +1767,8 @@ class UsersController extends Controller
                 $item->age,
                 $gender,
                 $block,
-                $roleHtml, // แสดง Role แทน PackageName
-                // $endDate,  // เอา EndDate ออก
+                $roleHtml,
+                $shopHtml, // ✅ เพิ่มคอลัมน์ Shop ตรงนี้
                 $action,
             );
         }
@@ -1861,7 +1989,7 @@ class UsersController extends Controller
     }
 
     function updateProfile(Request $req)
-    { 
+    {
         $user = Users::where('id', $req->user_id)->first();
 
         if (!$user) {
@@ -2008,6 +2136,7 @@ class UsersController extends Controller
         $data = Users::where('id', $id)->with(['images', 'package.package', 'promotionPackage.promotionPackage'])->first();
         $data['packages'] = DB::table('packages')->get();
         $data['promotionPackages'] = DB::table('promotion_packages')->get();
+        $data['shops'] = Shop::where('is_active', 1)->get();
         return view('viewuser', ['data' => $data]);
     }
 

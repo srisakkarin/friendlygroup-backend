@@ -130,6 +130,18 @@
                         <option value="staff" {{ $data['role'] == 'staff' ? 'selected' : '' }}>Staff</option>
                     </select>
                 </div>
+
+                <div class="form-group col-md-3">
+                    <label>Branch / Shop</label>
+                    <select name="shop_id" class="form-control selectric">
+                        <option value="">-- No Shop --</option>
+                        @foreach ($data['shops'] as $shop)
+                            <option value="{{ $shop->id }}" {{ $data['shop_id'] == $shop->id ? 'selected' : '' }}>
+                                {{ $shop->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
                 
                 <div class="form-group col-md-3">
                     <label>{{ __('app.Following') }}</label>

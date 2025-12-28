@@ -224,4 +224,5 @@ return [
     'points' => "Points",
     'rewards' => "Rewards",
     'redemptions' => "Redemptions",
+    'Branch'=> "Branch"
 ];
