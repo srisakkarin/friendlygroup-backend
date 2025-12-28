@@ -586,12 +586,12 @@ class UsersController extends Controller
             ->whereNotIn('id', $blockedUsers)
             ->where('is_block', 0)
             ->where('role','entertainer')
-            ->when($genderPreference != 3, function ($query) use ($genderPreference) {
-                $query->where('gender', $genderPreference == 1 ? 1 : 2);
-            })
-            ->when($ageMin && $ageMax, function ($query) use ($ageMin, $ageMax) {
-                $query->whereBetween('age', [$ageMin, $ageMax]);
-            })
+            // ->when($genderPreference != 3, function ($query) use ($genderPreference) {
+            //     $query->where('gender', $genderPreference == 1 ? 1 : 2);
+            // })
+            // ->when($ageMin && $ageMax, function ($query) use ($ageMin, $ageMax) {
+            //     $query->whereBetween('age', [$ageMin, $ageMax]);
+            // })
             ->inRandomOrder()
             ->limit(15);
 
