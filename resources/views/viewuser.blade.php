@@ -5,7 +5,7 @@
 <link rel="stylesheet" href="{{ asset('asset/style/addFakeUser.css') }}">
 @endsection
 @section('content')
-<div class="card">
+ <div class="card">
     <div class="card-header" id="reloadContent">
         <div>
             <h5>
@@ -13,15 +13,21 @@
                 echo $data['fullname'];
 
                 if ($data['can_go_live'] == 2) {
-                    echo '<span class="ml-2 badge bg-success text-white  ">Can Go Live</span>';
-                } else {
-                    // echo '<span class="ml-2 badge bg-danger text-white  ">Not Eligible To Go Live</span>';
+                    echo '<span class="ml-2 badge bg-success text-white">Can Go Live</span>';
                 }
+
                 if ($data['is_fake'] == 1) {
                     echo '<span class="ml-2 badge bg-black text-white fs-6">Fake User</span>';
                 } else {
                     echo '<span class="ml-2 badge bg-success text-white fs-6">Real User</span>';
                 }
+
+                // แสดง Role ปัจจุบัน
+                $roleColor = 'secondary';
+                if ($data['role'] == 'staff') $roleColor = 'info';
+                elseif ($data['role'] == 'entertainer') $roleColor = 'warning';
+                elseif ($data['role'] == 'customer') $roleColor = 'success';
+                echo '<span class="ml-2 badge bg-'.$roleColor.' text-white fs-6">'.ucfirst($data['role'] ?? 'customer').'</span>';
                 ?>
                 <br>
                 @if ($data->package && $data->package->package)
@@ -35,8 +41,6 @@
         </div>
 
         <div class="d-flex ml-auto">
-
-
             @if($data['is_block'] == 1)
             <h2 class='btn btn-success unblock' rel='{{ $data->id }}'>{{ __('app.Unblock') }}</h2>
             @else
@@ -55,7 +59,6 @@
             <h2 class='btn btn-primary ml-2'>{{ __('app.Female') }}</h2>
             @endif
 
-
             <h2 class='btn btn-danger ml-2 deleteUser' rel='{{ $data->id }}'>
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-trash-2 me-2">
                     <polyline points="3 6 5 6 21 6"></polyline>
@@ -71,7 +74,6 @@
 
         <div class="form-row mb-3 ">
             @foreach ($data['images'] as $image)
-            {{-- <img class="rounded m-1 " src="{{ env('image') }}{{ $image->image }}" width="130" height="130"> --}}
             <div class="borderwrap2 " data-href="">
                 <div class="filenameupload2">
                     <img class="rounded " src="{{ env('image') }}{{ $image->image }}" width="130" height="130">
@@ -90,6 +92,7 @@
             @csrf
 
             <input class=" form-control" readonly name="id" value="{{ $data['id'] }}" type="text" id="userId" hidden>
+            <input type="hidden" name="user_id" value="{{ $data['id'] }}">
 
             <div class="form-row">
                 @if ($data['is_fake'] == 0)
@@ -115,17 +118,30 @@
                     <label>{{ __('app.Age') }}</label>
                     <input name="age" class="form-control" value="{{ $data['age'] }}" readonly>
                 </div>
-                <div class="form-group col-md-2">
-                    <label>{{ __('app.Live') }}</label>
-                    <input name="live" class="form-control" value="{{ $data['live'] }}" readonly>
+            </div>
+
+            <div class="form-row">
+                 {{-- เพิ่มส่วนเลือก Role --}}
+                 <div class="form-group col-md-3">
+                    <label>{{ __('app.Role') }}</label>
+                    <select name="role" class="form-control selectric">
+                        <option value="customer" {{ ($data['role'] ?? 'customer') == 'customer' ? 'selected' : '' }}>Customer</option>
+                        <option value="entertainer" {{ $data['role'] == 'entertainer' ? 'selected' : '' }}>Entertainer</option>
+                        <option value="staff" {{ $data['role'] == 'staff' ? 'selected' : '' }}>Staff</option>
+                    </select>
                 </div>
-                <div class="form-group col-md-1">
+                
+                <div class="form-group col-md-3">
                     <label>{{ __('app.Following') }}</label>
                     <input name="following" class="form-control" value="{{ $data['following'] }}" readonly>
                 </div>
-                <div class="form-group col-md-1">
+                <div class="form-group col-md-3">
                     <label>{{ __('app.Followers') }}</label>
                     <input name="followers" class="form-control" value="{{ $data['followers'] }}" readonly>
+                </div>
+                <div class="form-group col-md-3">
+                    <label>{{ __('app.Live') }}</label>
+                    <input name="live" class="form-control" value="{{ $data['live'] }}" readonly>
                 </div>
             </div>
 
@@ -163,7 +179,7 @@
     </div>
 </div>
 <!-- Package -->
-<div class="my-3 card-tab">
+{{-- <div class="my-3 card-tab">
     <ul class="nav nav-tabs" id="packageTab" role="tablist">
         <li class="nav-item " role="presentation">
             <button class="nav-link active" id="userPackageTab" data-bs-toggle="tab" data-bs-target="#userPackageTab-pane" type="button" role="tab" aria-controls="userPackageTab-panel" aria-selected="true"> {{ __('app.user_package')}} </button>
@@ -172,9 +188,9 @@
             <button class="nav-link" id="promotionPackageTab" data-bs-toggle="tab" data-bs-target="#promotionPackageTab-pane" type="button" role="tab" aria-controls="promotionPackageTab-panel" aria-selected="true"> {{ __('app.promotion_package')}} </button>
         </li>
     </ul>
-</div>
+</div> --}}
 
-<div class="tab-content" id="packageTabContent">
+{{-- <div class="tab-content" id="packageTabContent">
     <div class="tab-pane show active" id="userPackageTab-pane" role="tabpanel" tabindex="0">
         <div class="card">
             <div class="card-header">
@@ -234,7 +250,7 @@
             </div>
         </div>
     </div>
-</div>
+</div> --}}
 <!-- End Package -->
 
 <div class="my-3 card-tab">

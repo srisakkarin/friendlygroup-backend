@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\Api\RewardController;
+use App\Http\Controllers\Api\StaffController;
+use App\Http\Controllers\Api\UserLoyaltyController;
 use App\Http\Controllers\CartsController;
 use App\Http\Controllers\DiamondPackController;
 use App\Http\Controllers\GiftsController;
@@ -223,3 +226,18 @@ Route::post('jobRequests/deleteJobRequest', [JobRequestsController::class, 'dest
 
 //invitaion
 Route::post('invite/invitedUsers',[UsersController::class,'getInvitedUsers'])->middleware('checkHeader'); //ดึงรายชื่อสมาชิกที่ถูกเชิญ
+
+// --- User Loyalty ---
+Route::post('/user/points', [UserLoyaltyController::class, 'getPoints'])->middleware('checkHeader');
+Route::post('/user/generate-qr', [UserLoyaltyController::class, 'generateMyQr'])->middleware('checkHeader');
+
+// --- Rewards ---
+Route::get('/rewards', [RewardController::class, 'index'])->middleware('checkHeader');      // รายการทั้งหมด
+Route::get('/rewards/{id}', [RewardController::class, 'show'])->middleware('checkHeader'); // ✅ รายละเอียดรายตัว (Reward Detail)
+Route::post('/rewards/redeem', [RewardController::class, 'redeem'])->middleware('checkHeader');
+
+Route::match(['get', 'post'], '/user/rewards', [RewardController::class, 'getMyRewards']); 
+Route::match(['get', 'post'], '/user/rewards-detail/{id}', [RewardController::class, 'getMyRewardDetail']);
+
+// --- Staff Operations ---
+Route::post('/staff/scan', [StaffController::class, 'scan'])->middleware('checkHeader');

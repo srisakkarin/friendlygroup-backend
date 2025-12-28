@@ -173,13 +173,13 @@ class Users extends Model
         );
     }
     public function pointTransactions()
-    {
-        return $this->hasMany(PointTransaction::class)->orderBy('created_at', 'desc');
+    { 
+        return $this->hasMany(PointTransaction::class, 'user_id')->orderBy('created_at', 'desc');
     }
 
     public function redemptions()
-    {
-        return $this->hasMany(Redemption::class);
+    { 
+        return $this->hasMany(Redemption::class, 'user_id');
     }
 
     public function isStaff()

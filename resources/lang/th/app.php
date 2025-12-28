@@ -216,4 +216,11 @@ return [
     'Yes_delete_it' => "ใช่, ลบเลย!",
     'Cancel' => "ยกเลิก",
     'failed_to_load_categories' => "ไม่สามารถโหลดหมวดหมู่ได้",
+    'role' => "บทบาท",
+    'Role' => "บทบาท",
+    'Entertainer' => "เอ็นเตอร์เทรน",
+    'Staff' => "พนักงาน",
+    'points' => "แต้มสะสม",
+    'rewards' => "คูปอง/ของรางวัล",
+    'redemptions' => "การแลกของรางวัล", 
 ];

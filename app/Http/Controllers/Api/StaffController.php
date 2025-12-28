@@ -4,83 +4,98 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\User;
+use App\Models\Users;
 use App\Models\Redemption;
 use App\Models\PointTransaction;
-use App\Models\Users;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 
 class StaffController extends Controller
 {
-    // POST /api/staff/scan
     public function scan(Request $request)
     {
-        
-
-        $request->validate([
-            'user_id' => 'required|numeric',
+        $validator = Validator::make($request->all(), [
+            'user_id' => 'required', // ID ของพนักงานที่ทำการสแกน
             'qr_code' => 'required|string',
-            'total_price' => 'nullable|numeric' // Required if redeeming discount
+            'total_price' => 'nullable|numeric'
         ]);
 
-        // Validate Staff Role
-        $user = Users::where('id', $request->user_id)->first();
-        if ($user->role !== 'staff') {
-            return response()->json(['status' => false, 'message' => 'Unauthorized'], 403);
+        if ($validator->fails()) {
+            $messages = $validator->errors()->all();
+            $msg = $messages[0];
+            return response()->json(['status' => false, 'message' => $msg]);
         }
 
-        $qrCode = $request->qr_code;
-        $parts = explode(':', $qrCode);
+        // ตรวจสอบพนักงาน
+        $staff = Users::where('id', $request->user_id)->first();
 
-        if (count($parts) < 3 || $parts[0] !== 'fg') {
-            return response()->json(['status' => false, 'message' => 'Invalid QR Code format'], 400);
+        if (!$staff) {
+            return response()->json(['status' => false, 'message' => 'Staff user not found!']);
         }
 
-        $type = $parts[1]; // 'points' or 'redeem'
-        $id = $parts[2];   // user_id or redemption_id
+        if ($staff->role !== 'staff') {
+            return response()->json(['status' => false, 'message' => 'Unauthorized. Staff role required.'], 403);
+        }
+
+        // Parse QR Code
+        $qrData = explode(':', $request->qr_code);
+        if (count($qrData) !== 3 || $qrData[0] !== 'fg') {
+            return response()->json(['status' => false, 'message' => 'Invalid QR Code format.'], 400);
+        }
+
+        $type = $qrData[1]; 
+        $id = $qrData[2];   
 
         if ($type === 'points') {
-            return $this->processAddPoints($id);
+            return $this->processAddPoints($id, $staff);
         } elseif ($type === 'redeem') {
-            return $this->processRedemption($id, $request->total_price);
+            return $this->processUseReward($id, $request->total_price, $staff);
+        } else {
+            return response()->json(['status' => false, 'message' => 'Unknown QR type.'], 400);
+        }
+    }
+
+    private function processAddPoints($userId, $staff)
+    {
+        $customer = Users::find($userId);
+        if (!$customer) {
+            return response()->json(['status' => false, 'message' => 'Customer not found.'], 404);
         }
 
-        return response()->json(['status' => false, 'message' => 'Unknown QR Type'], 400);
-    }
+        $pointsToAdd = 10; // Configurable points
 
-    private function processAddPoints($userId)
-    {
-        $user = User::find($userId);
-        if (!$user) return response()->json(['status' => false, 'message' => 'User not found'], 404);
-
-        // Configurable points per scan (e.g., from settings table)
-        $pointsToAdd = 50; 
-
-        DB::transaction(function () use ($user, $pointsToAdd) {
-            $user->points += $pointsToAdd;
-            $user->save();
+        DB::beginTransaction();
+        try {
+            $customer->points += $pointsToAdd;
+            $customer->save();
 
             PointTransaction::create([
-                'user_id' => $user->id,
+                'user_id' => $customer->id,
                 'amount' => $pointsToAdd,
                 'type' => 'earn',
-                'description' => 'Earned from shop visit (Scanned by Staff)',
-                'related_id' => Auth::id(), // Staff ID
+                'description' => 'Store Visit (Staff: ' . $staff->fullname . ')',
+                'related_id' => $staff->id,
                 'related_type' => 'staff_scan'
             ]);
-        });
 
-        return response()->json([
-            'status' => true, 
-            'message' => "Added $pointsToAdd points to user {$user->name}",
-            'data' => ['current_points' => $user->points]
-        ]);
+            DB::commit();
+
+            return response()->json([
+                'status' => true,
+                'message' => "Added $pointsToAdd points to {$customer->fullname}",
+                'data' => [
+                    'current_points' => $customer->points
+                ]
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['status' => false, 'message' => 'Error adding points.'], 500);
+        }
     }
 
-    private function processRedemption($redemptionId, $totalPrice)
+    private function processUseReward($redemptionId, $totalPrice, $staff)
     {
-        $redemption = Redemption::with('reward')->find($redemptionId);
+        $redemption = Redemption::with('reward', 'user')->find($redemptionId);
 
         if (!$redemption) {
             return response()->json(['status' => false, 'message' => 'Redemption record not found'], 404);
@@ -92,10 +107,11 @@ class StaffController extends Controller
 
         $reward = $redemption->reward;
         $discountAmount = 0;
+        $finalPrice = 0;
 
         if ($reward->type === 'discount') {
             if (!$totalPrice) {
-                return response()->json(['status' => false, 'message' => 'Total price required for discount calculation'], 400);
+                return response()->json(['status' => false, 'message' => 'Total price is required for discount calculation.'], 400);
             }
 
             if ($reward->discount_type === 'percent') {
@@ -103,23 +119,25 @@ class StaffController extends Controller
             } else {
                 $discountAmount = $reward->discount_value;
             }
+
+            $finalPrice = max(0, $totalPrice - $discountAmount);
         }
 
-        // Mark as used
-        $redemption->update([
-            'is_used' => true,
-            'used_at' => now(),
-            'total_price' => $totalPrice
-        ]);
+        $redemption->is_used = 1;
+        $redemption->used_at = now();
+        $redemption->total_price = $totalPrice;
+        $redemption->save();
 
         return response()->json([
             'status' => true,
-            'message' => 'Reward redeemed successfully',
+            'message' => 'Reward redeemed successfully!',
             'data' => [
-                'type' => $reward->type,
+                'reward_type' => $reward->type,
                 'reward_name' => $reward->name,
+                'customer_name' => $redemption->user->fullname,
+                'original_price' => $totalPrice,
                 'discount_amount' => $discountAmount,
-                'final_price' => $totalPrice ? ($totalPrice - $discountAmount) : 0
+                'final_price' => $finalPrice
             ]
         ]);
     }

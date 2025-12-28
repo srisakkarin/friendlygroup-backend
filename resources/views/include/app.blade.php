@@ -205,6 +205,7 @@
                                 <span>{{ __('app.Setting') }}</span>
                             </a>
                         </li> -->
+                        <!--
                         <li class="sideBarli otherSideA">
                             <a href="#" class="nav-link has-dropdown">
                                 <i class="fas fa-layer-group"></i>
@@ -231,6 +232,7 @@
                                 <span>{{ __('app.product_list') }}</span>
                             </a>
                         </li>
+                        -->
                         <li class="sideBarli otherSideA">
                             <a href="#" class="nav-link has-dropdown">
                                 <i class="fas fa-cog pt-1"></i>

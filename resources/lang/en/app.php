@@ -217,4 +217,11 @@ return [
     'Yes_delete_it' => "Yes, delete it!",
     'Cancel' => "Cancel",
     'failed_to_load_categories' => "Failed to load categories.",
+    'role' => "Role",
+    'Role' => "Role",
+    'Entertainer' => "Entertainer",
+    'Staff' => "Staff",
+    'points' => "Points",
+    'rewards' => "Rewards",
+    'redemptions' => "Redemptions",
 ];

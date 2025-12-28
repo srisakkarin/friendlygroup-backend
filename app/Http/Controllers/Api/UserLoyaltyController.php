@@ -3,15 +3,13 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Users;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use App\Models\Users;
 use Illuminate\Support\Facades\Validator;
-use SimpleSoftwareIO\QrCode\Facades\QrCode; // ต้อง install package เพิ่ม: simplesoftwareio/simple-qrcode
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class UserLoyaltyController extends Controller
 {
-    // GET /api/user/points
     public function getPoints(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -27,23 +25,27 @@ class UserLoyaltyController extends Controller
         $user = Users::where('id', $request->user_id)->first();
 
         if (!$user) {
-            return response()->json(['status' => false, 'message' => 'User Not Found']);
+            return response()->json(['status' => false, 'message' => 'User not found!']);
         }
-        // $user = Auth::user();
+
+        // ดึงประวัติธุรกรรมแต้ม 20 รายการล่าสุด
+        $transactions = $user->pointTransactions()
+            ->select('id', 'amount', 'type', 'description', 'created_at')
+            ->orderBy('created_at', 'desc')
+            ->limit(20)
+            ->get();
 
         return response()->json([
             'status' => true,
             'data' => [
                 'total_points' => $user->points,
-                'transactions' => $user->pointTransactions()->take(20)->get()
+                'transactions' => $transactions
             ]
         ]);
     }
 
-    // POST /api/user/generate-points-qr
-    public function generatePointsQr(Request $request)
+    public function generateMyQr(Request $request)
     {
-
         $validator = Validator::make($request->all(), [
             'user_id' => 'required',
         ]);
@@ -57,19 +59,38 @@ class UserLoyaltyController extends Controller
         $user = Users::where('id', $request->user_id)->first();
 
         if (!$user) {
-            return response()->json(['status' => false, 'message' => 'User Not Found']);
+            return response()->json(['status' => false, 'message' => 'User not found!']);
         }
-        // Payload pattern: fg:points:{user_id}
-        $payload = "fg:points:" . $user->id;
 
-        // ถ้าต้องการส่งเป็น Image Base64
-        // $qrImage = base64_encode(QrCode::format('png')->size(200)->generate($payload));
+        // Format QR: fg:points:{user_id}
+        $qrPayload = "fg:points:" . $user->id;
+
+        // Generate QR Image (Base64)
+        $qrBase64 = '';
+        try {
+            // พยายามใช้ PNG (ต้องการ extension 'imagick' ใน PHP)
+            $qrImage = QrCode::format('png')
+                ->size(300)
+                ->margin(1)
+                ->generate($qrPayload);
+
+            $qrBase64 = 'data:image/png;base64,' . base64_encode($qrImage);
+        } catch (\Exception $e) {
+            // กรณี Server ไม่มี imagick ให้ใช้ svg แทน
+            $qrImage = QrCode::format('svg')
+                ->size(300)
+                ->margin(1)
+                ->generate($qrPayload);
+            $qrBase64 = 'data:image/svg+xml;base64,' . base64_encode($qrImage);
+        }
 
         return response()->json([
             'status' => true,
             'data' => [
-                'qr_code_payload' => $payload,
-                'description' => 'Show this QR code to staff to earn points.'
+                'qr_code_payload' => $qrPayload, // ส่ง payload ไปด้วยเผื่อจำเป็นต้องใช้
+                'qr_image' => $qrBase64,         // ✅ เอาค่านี้ไปใส่ใน <img src="..."> ได้เลย
+                'type' => 'earn_points',
+                'description' => 'Show this QR to staff to earn points'
             ]
         ]);
     }
