@@ -68,8 +68,8 @@ Route::post('updateUserBlockList', [UsersController::class, 'updateUserBlockList
 Route::post('deleteMyAccount', [UsersController::class, 'deleteMyAccount'])->middleware('checkHeader');
 Route::post('getProfile', [UsersController::class, 'getProfile'])->middleware('checkHeader');
 Route::post('getUserDetails', [UsersController::class, 'getUserDetails'])->middleware('checkHeader');
-Route::post('getRandomProfile', [UsersController::class, 'getRandomProfile']);
-Route::post('getExplorePageProfileList', [UsersController::class, 'getExplorePageProfileList']);
+Route::post('getRandomProfile', [UsersController::class, 'getRandomProfile'])->middleware('checkHeader');
+Route::post('getExplorePageProfileList', [UsersController::class, 'getExplorePageProfileList'])->middleware('checkHeader');
 
 Route::post('updateSavedProfile', [UsersController::class, 'updateSavedProfile'])->middleware('checkHeader');
 Route::post('updateLikedProfile', [UsersController::class, 'updateLikedProfile'])->middleware('checkHeader');
