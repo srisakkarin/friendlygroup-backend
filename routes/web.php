@@ -1,5 +1,5 @@
 <?php
- 
+
 
 use App\Http\Controllers\Admin\RedemptionController;
 use App\Http\Controllers\DiamondPackController;
@@ -17,11 +17,12 @@ use App\Http\Controllers\PagesController;
 use App\Http\Controllers\PointController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\PromotionPackageController;
-use App\Http\Controllers\RedeemRequestsController; 
+use App\Http\Controllers\RedeemRequestsController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RevenueSharingRuleController;
 use App\Http\Controllers\RewardController;
 use App\Http\Controllers\SettingController;
+use App\Http\Controllers\ShopController;
 use App\Http\Controllers\ShopProductCategoriesController;
 use App\Http\Controllers\ShopProductController;
 use App\Http\Controllers\UsersController;
@@ -255,8 +256,8 @@ Route::post('deleteProductCategory', [ShopProductCategoriesController::class, 'd
 Route::get('getProductCategoryById/{id}', [ShopProductCategoriesController::class, 'getProductCategoryById'])->name('getProductCategoryById')->middleware(['checkLogin']);
 //product
 Route::get('products', [ShopProductController::class, 'index'])->name('products.index')->middleware(['checkLogin']);
-Route::get('getAllProductCategory',[ShopProductController::class, 'getAllProductCategory'])->name('getAllProductCategory')->middleware(['checkLogin']);
-Route::post('fetchAllProducts',[ShopProductController::class, 'fetchAllProducts'])->name('fetchAllProducts')->middleware(['checkLogin']);
+Route::get('getAllProductCategory', [ShopProductController::class, 'getAllProductCategory'])->name('getAllProductCategory')->middleware(['checkLogin']);
+Route::post('fetchAllProducts', [ShopProductController::class, 'fetchAllProducts'])->name('fetchAllProducts')->middleware(['checkLogin']);
 Route::post('addProduct', [ShopProductController::class, 'addProduct'])->name('addProduct')->middleware(['checkLogin']);
 Route::post('updateProduct', [ShopProductController::class, 'updateProduct'])->name('updateProduct')->middleware(['checkLogin']);
 Route::post('deleteProduct', [ShopProductController::class, 'deleteProduct'])->name('deleteProduct')->middleware(['checkLogin']);
@@ -283,6 +284,13 @@ Route::get('/get-users-points', [PointController::class, 'getUsersPoints'])->mid
 Route::get('/get-point-history', [PointController::class, 'getPointHistory'])->middleware(['checkLogin']);
 Route::post('/adjust-points', [PointController::class, 'adjustPoints'])->middleware(['checkLogin']);
 
+// Shop Management
+Route::get('/shops', [ShopController::class, 'index'])->name('shops')->middleware(['checkLogin']);
+Route::post('/fetchShops', [ShopController::class, 'fetchShops'])->middleware(['checkLogin']);
+Route::post('/saveShop', [ShopController::class, 'store'])->middleware(['checkLogin']);
+Route::get('/getShop/{id}', [ShopController::class, 'edit'])->middleware(['checkLogin']);
+Route::post('/deleteShop/{id}', [ShopController::class, 'destroy'])->middleware(['checkLogin']);
+
 // Pages Routes
 Route::get('viewPrivacy', [PagesController::class, 'viewPrivacy'])->middleware(['checkLogin'])->name('viewPrivacy');
 Route::post('updatePrivacy', [PagesController::class, 'updatePrivacy'])->middleware(['checkLogin'])->name('updatePrivacy');
@@ -295,7 +303,7 @@ Route::get('termsOfUse', [PagesController::class, 'termsOfUse'])->name('termsOfU
 Route::get('income-settings', [RevenueSharingRuleController::class, 'index'])->name('income-settings.index');
 Route::post('income-settings', [RevenueSharingRuleController::class, 'update'])->name('income-settings.update');
 //invitation
-Route::get('invite/{id}/invitee',[UsersController::class, 'invitee'])->name('invitee'); 
+Route::get('invite/{id}/invitee', [UsersController::class, 'invitee'])->name('invitee');
 Route::post('fetchUserInvitees', [UsersController::class, 'fetchUserInvitees'])->name('fetchUserInvitees');
 
 Route::get('change-language/{language}', function ($language) {
@@ -307,4 +315,4 @@ Route::get('change-language/{language}', function ($language) {
 Route::get('{modelType}/{modelId}/update-html-content', [HtmlContentController::class, 'index'])->name('html-content');
 Route::post('{modelType}/{modelId}/update-html-content', [HtmlContentController::class, 'update'])->name('html-content.update');
 
-Route::post('{modelType}/{modelId}/upload-file',[FileController::class,'uploadFile'])->name('upload-file');
+Route::post('{modelType}/{modelId}/upload-file', [FileController::class, 'uploadFile'])->name('upload-file');

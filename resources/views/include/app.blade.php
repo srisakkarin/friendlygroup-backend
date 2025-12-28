@@ -193,11 +193,17 @@
                                 <span>{{ __('app.Notifications') }}</span>
                             </a>
                         </li>
-                        <li class="sideBarli interestsSideA">
-                            <a href="{{ route('interest') }}" class="nav-link">
-                                <i class="fas fa-heart"></i>
-                                <span>{{ __('app.Interests') }}</span>
+                        <li class="sideBarli shopsSideA">
+                            <a href="{{ route('shops') }}" class="nav-link">
+                                <i class="fas fa-store"></i>
+                                <span>{{ __('app.shops') }}</span>
                             </a>
+                            <li class="sideBarli notificationSideA">
+                            <a href="{{ route('notifications') }}" class="nav-link">
+                                <i class="fas fa-bell"></i>
+                                <span>{{ __('app.Notifications') }}</span>
+                            </a>
+                        </li>
                             <!-- </li>
                         <li class="sideBarli otherSideA">
                             <a href="{{ route('setting') }}">
